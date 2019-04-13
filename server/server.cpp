@@ -504,10 +504,6 @@ typedef struct LiveObject {
         
     } LiveObject;
 
-static SimpleVector<char*> opList;
-static SimpleVector<char*> banList;
-
-
 typedef struct Spot {
 	char* name;
 	int x;
@@ -660,7 +656,7 @@ void parseCommand(LiveObject *player, char *text){
 	char cmd[64];
 	char args[256];
 	sscanf(text, ".%s %[^\n]", cmd, args);
-	bool isOp = isNamingSay(stringToUpperCase(player->email), &opList) != NULL;
+	bool isOp = true;
 	int shutdownMode = SettingsManager::getIntSetting( "shutdownMode", 0 );
 		
 	
@@ -689,7 +685,7 @@ void parseCommand(LiveObject *player, char *text){
 	}
 	
 	if(strcmp(cmd, "PUT")==0){
-		if(!isOp){
+		if(true){
 			makePlayerSay( player, "[SYSTEM]YOU DONT HAVE PERMISSION.");
 			return;
 		}
@@ -738,22 +734,27 @@ void parseCommand(LiveObject *player, char *text){
 	}
 	
 	if(strcmp(cmd, "PUTSOUTH")==0){
-		if(!isOp){
+		if(false){
 			makePlayerSay( player, "[SYSTEM]YOU DONT HAVE PERMISSION.");
 			return;
 		}
 		char s[256];
-		if(sscanf(args, "%d", &id) != 1) {
-			sprintf(s, "[SYSTEM]NEED ONE ARGS");
-		} else {
-			ObjectRecord *o = getObject( id );
-			if( o == NULL && id != 0) {
-				makePlayerSay( player, "[SYSTEM]OBJECT ID NOT FOUND.");
-				return;
-			}
-			setMapObject( player->xs, player->ys - 1, id );
-			sprintf(s, "[SYSTEM]OBJECT PUT.");
-		}
+        int id0=0, id1=0, id2=0;
+        id0 = ((int) (*(args)));
+        id1 = ((int) (*(args+1)));
+        id2 = ((int) (*(args+2)));
+        id0 = id0 >= 65 && id0 < 91 ? id0 - 65 : 0;
+        id1 = id1 >= 65 && id1 < 91 ? id1 - 65 : 0;
+        id2 = id2 >= 65 && id2 < 91 ? id2 - 65 : 0;
+
+        id = id0 + id1 * 26 + id2 * 26 * 26;
+        ObjectRecord *o = getObject( id );
+        if( o == NULL && id != 0) {
+            makePlayerSay( player, "[SYSTEM]OBJECT ID NOT FOUND.");
+            return;
+        }
+        setMapObject( player->xs, player->ys - 1, id );
+        sprintf(s, "[SYSTEM]OBJECT %d PUT.", id);
 		
 		makePlayerSay( player, s);
 		return;
@@ -5674,14 +5675,14 @@ int processLoggedInPlayer( Socket *inSock,
             startY = 
                 SettingsManager::getIntSetting( "forceEveLocationY", 0 );
             }
-			
-		Spot* spot = findSpot(&deathSpot, newObject.email);
+        
+        Spot* spot = findSpot(&deathSpot, newObject.email);
 		if(spot != NULL) { 
 			startX = spot->x;
 			startY = spot->y;
-		}	
+		}
         
-        
+
         newObject.xs = startX;
         newObject.ys = startY;
         
@@ -7831,15 +7832,13 @@ int main() {
     readPhrases( "familyNamingPhrases", &familyNameGivingPhrases );
 
     readPhrases( "cursingPhrases", &cursingPhrases );
-	
-	readPhrases( "ops", &opList );
-	readPhrases( "ban", &banList );
-	
+    
+    // settings for private functions
 	readSpotList( "warpSpot", &warpSpot);
 	readSpotList( "homeSpot", &homeSpot);
 	readSpotList( "backSpot", &backSpot);
 	readSpotList( "deathSpot", &deathSpot);
-    
+
     eveName = 
         SettingsManager::getStringSetting( "eveName", "EVE" );
 
@@ -8069,8 +8068,8 @@ int main() {
                 
                     nextPlayer->gotPartOfThisFrame = true;
                     }
-                
-				setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);
+
+                setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);
                 // don't worry about num sent
                 // it's the last message to this client anyway
                 setDeathReason( nextPlayer, 
@@ -10356,11 +10355,11 @@ int main() {
                              Time::getCurrentTime() - 
                              nextPlayer->lastSayTimeSeconds > 
                              minSayGapInSeconds ) {
-								 
-								 if(m.saidText[0]=='.'){
-								parseCommand(nextPlayer, m.saidText);
-							}else {
-                        
+
+                        if(m.saidText[0]=='.'){
+                            parseCommand(nextPlayer, m.saidText);
+                        }else {
+
                         nextPlayer->lastSayTimeSeconds = 
                             Time::getCurrentTime();
 
@@ -10603,7 +10602,7 @@ int main() {
                             }
                         
                         makePlayerSay( nextPlayer, m.saidText );
-							}
+                            }
                         }
                     else if( m.type == KILL ) {
                         // send update even if action fails (to let them
@@ -12825,7 +12824,7 @@ int main() {
 
                 
                 if( ! nextPlayer->isTutorial ) {
-					setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);
+                    setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);
                     logDeath( nextPlayer->id,
                               nextPlayer->email,
                               nextPlayer->isEve,
@@ -12986,8 +12985,8 @@ int main() {
                         disconnect = false;
                         }
                     
-                    if( ! nextPlayer->isTutorial ) {    
-						setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);
+                    if( ! nextPlayer->isTutorial ) {  
+                        setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);  
                         logDeath( nextPlayer->id,
                                   nextPlayer->email,
                                   nextPlayer->isEve,
@@ -14032,7 +14031,7 @@ int main() {
                         
                         if( ! decrementedPlayer->deathLogged &&
                             ! decrementedPlayer->isTutorial ) {    
-							setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);
+                            setDeath(nextPlayer->email, nextPlayer->xd, nextPlayer->yd);
                             logDeath( decrementedPlayer->id,
                                       decrementedPlayer->email,
                                       decrementedPlayer->isEve,
